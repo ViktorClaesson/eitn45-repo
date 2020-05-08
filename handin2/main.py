@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import operator
+import math
 
 
 # SOURCE CHARACTER CODING
@@ -28,7 +29,7 @@ def probabilities(fileName):
     for key in output:
         output[key] /= sum
 
-    return output
+    return output, sum
 
 
 # HUFFMAN COODING
@@ -65,27 +66,58 @@ def huffman(source):
     return source[0]
 
 
-# OUTPuT CODEWORDS
-def codewords(file, huffman, prefix):
+# OUTPUT CODEWORDS
+def codewords(huffman, file, prefix=""):
     if(isinstance(huffman, Leaf)):
         file.write(f"{repr(huffman.char)}, {huffman.prob:.6f}, {prefix}\n")
     else:
-        codewords(f, huffman.left, f"{prefix}0")
-        codewords(f, huffman.right, f"{prefix}1")
+        codewords(huffman.left, file, f"{prefix}0")
+        codewords(huffman.right, file, f"{prefix}1")
+
+
+# HUFFMAN NODE TREE TO CODEWORD DICT
+def tree2dict(huffman, out={}, prefix=""):
+    if(isinstance(huffman, Leaf)):
+        out[huffman.char] = len(prefix)
+    else:
+        tree2dict(huffman.left, out, f"{prefix}0")
+        tree2dict(huffman.right, out, f"{prefix}1")
+    return out
 
 
 # HUFFMAN CONVERTER
-def encode():
-    print("encode")
+def encoded_length(fileName, huffdict):
+    size = 0
+    with open(fileName) as f:
+        for line in f:
+            for c in line:
+                size += huffdict[c]
+        f.close()
+    return size
+
+
+# ENTROPY
+def entropy(probabilities):
+    sum = 0
+    for k in probabilities:
+        sum += -probabilities[k] * math.log(probabilities[k], 2)
+    return sum
 
 
 if __name__ == '__main__':
-    source = probabilities("Alice29.txt")
+    source, characters = probabilities("Alice29.txt")
+    print(f"Entropy: {entropy(source):.3f}")
+    print(f"Decoded avg length: {8:.3f}, total length: {8 * characters:7}")
     source_sorted = sorted(
         source.items(), key=operator.itemgetter(1), reverse=True)
 
     huffm = huffman(source_sorted)
+    huffdict = tree2dict(huffm)
+
+    enc_len = encoded_length("Alice29.txt", huffdict)
+    print(
+        f"Encoded avg length: {enc_len / characters:.3f}, total length: {enc_len:7}")
 
     with open("source.out", "w") as f:
-        codewords(f, huffm, "")
+        codewords(huffm, f)
         f.close()
