@@ -6,11 +6,11 @@ import math
 
 
 # SOURCE CHARACTER CODING
-def inc(elem, dict):
-    if elem in dict:
-        dict[elem] += 1
+def inc(e, D):
+    if e in D:
+        D[e] += 1
     else:
-        dict[elem] = 1
+        D[e] = 1
 
 
 # Format of output: {char1: occurrences1, char2: occurrences2, ...}
@@ -22,21 +22,21 @@ def probabilities(fileName):
             inc(c, output)
             c = f.read(1)
 
-    sum = 0
+    characters = 0
     for key in output:
-        sum += output[key]
+        characters += output[key]
 
     for key in output:
-        output[key] /= sum
+        output[key] /= characters
 
-    return output, sum
+    return output, characters
 
 
 # HUFFMAN COODING
 class Leaf:
-    def __init__(self, input):
-        self.char = input[0]
-        self.prob = input[1]
+    def __init__(self, pair):
+        self.char = pair[0]
+        self.prob = pair[1]
 
     def __repr__(self):
         return f"Leaf({self.char}, {self.prob})"
@@ -67,12 +67,12 @@ def huffman(source):
 
 
 # OUTPUT CODEWORDS
-def codewords(huffman, file, prefix=""):
+def codewords(huffman, infile, prefix=""):
     if(isinstance(huffman, Leaf)):
-        file.write(f"{repr(huffman.char)}, {huffman.prob:.6f}, {prefix}\n")
+        infile.write(f"{repr(huffman.char)}, {huffman.prob:.6f}, {prefix}\n")
     else:
-        codewords(huffman.left, file, f"{prefix}0")
-        codewords(huffman.right, file, f"{prefix}1")
+        codewords(huffman.left, infile, f"{prefix}0")
+        codewords(huffman.right, infile, f"{prefix}1")
 
 
 # HUFFMAN NODE TREE TO CODEWORD DICT
@@ -98,10 +98,10 @@ def encoded_length(fileName, huffdict):
 
 # ENTROPY
 def entropy(probabilities):
-    sum = 0
+    ent = 0
     for k in probabilities:
-        sum += -probabilities[k] * math.log(probabilities[k], 2)
-    return sum
+        ent += -probabilities[k] * math.log(probabilities[k], 2)
+    return ent
 
 
 if __name__ == '__main__':
